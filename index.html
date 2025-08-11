@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>متجر إلكتروني</title>
+<style>
+    body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background-color: #fff;
+        color: #000;
+    }
+    header {
+        background-color: #fff;
+        border-bottom: 2px solid red;
+        padding: 10px;
+        text-align: center;
+        font-size: 24px;
+        font-weight: bold;
+    }
+    nav {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        padding: 10px;
+        border-bottom: 1px solid #ccc;
+    }
+    nav a {
+        text-decoration: none;
+        color: #000;
+        padding: 5px 10px;
+        border: 2px solid transparent;
+        border-radius: 5px;
+    }
+    nav a:hover {
+        border-color: red;
+    }
+    .page {
+        display: none;
+        padding: 20px;
+    }
+    .active {
+        display: block;
+    }
+    .products-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 15px;
+    }
+    .product {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        overflow: hidden;
+        background-color: #fff;
+        text-align: center;
+        padding: 10px;
+        position: relative;
+    }
+    .product img {
+        width: 100%;
+        height: auto;
+        cursor: pointer;
+        border-bottom: 1px solid #ccc;
+    }
+    .new-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background-color: red;
+        color: #fff;
+        padding: 5px;
+        font-size: 12px;
+        border-radius: 5px;
+    }
+    .cart-icon {
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        background: white;
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        box-shadow: 0px 0px 10px rgba(0,0,0,0.3);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        z-index: 1000;
+    }
+    .cart-count {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        background-color: red;
+        color: white;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        font-size: 12px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    .cart-modal {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0px 0px 15px rgba(0,0,0,0.5);
+        padding: 20px;
+        z-index: 2000;
+        display: none;
+        width: 90%;
+        max-width: 400px;
+    }
+    .cart-modal.active {
+        display: block;
+    }
+    .cart-modal h2 {
+        margin-top: 0;
+    }
+    .close-cart {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        cursor: pointer;
+        font-size: 18px;
+        font-weight: bold;
+    }
+    .lightbox {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.8);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 3000;
+    }
+    .lightbox img {
+        max-width: 90%;
+        max-height: 80%;
+    }
+    .lightbox .prev,
+    .lightbox .next {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        color: white;
+        font-size: 30px;
+        cursor: pointer;
+        user-select: none;
+        background: rgba(0,0,0,0.3);
+        padding: 10px;
+        border-radius: 50%;
+    }
+    .lightbox .prev { left: 20px; }
+    .lightbox .next { right: 20px; }
+</style>
+</head>
+<body>
+<header>متجر إلكتروني</header>
+<nav>
+    <a href="#" data-page="products">المنتجات</a>
+    <a href="#" data-page="offers">العروض</a>
+    <a href="#" data-page="admin">لوحة التحكم</a>
+</nav>
+<div id="products" class="page active">
+    <div class="products-grid" id="products-grid"></div>
+</div>
+<div id="offers" class="page">
+    <h2>العروض</h2>
+    <p>لا توجد عروض حالياً.</p>
+</div>
+<div id="admin" class="page">
+    <h2>لوحة التحكم</h2>
+    <input type="password" id="admin-password" placeholder="كلمة المرور" />
+    <button id="login-btn">دخول</button>
+    <div id="admin-panel" style="display:none;">
+        <h3>إضافة منتج</h3>
+        <input type="text" id="product-name" placeholder="اسم المنتج" />
+        <input type="number" id="product-price" placeholder="السعر" />
+        <textarea id="product-description" placeholder="الوصف"></textarea>
+        <input type="text" id="product-image1" placeholder="رابط الصورة 1" />
+        <input type="text" id="product-image2" placeholder="رابط الصورة 2" />
+        <input type="text" id="product-image3" placeholder="رابط الصورة 3" />
+        <input type="text" id="product-image4" placeholder="رابط الصورة 4" />
+        <input type="text" id="product-image5" placeholder="رابط الصورة 5" />
+        <input type="text" id="product-image6" placeholder="رابط الصورة 6" />
+        <input type="text" id="product-image7" placeholder="رابط الصورة 7" />
+        <input type="text" id="product-image8" placeholder="رابط الصورة 8" />
+        <button id="add-product-btn">إضافة</button>
+    </div>
+</div>
+<div class="cart-icon" id="cart-icon">
+    🛒
+    <div class="cart-count" id="cart-count">0</div>
+</div>
+<div class="cart-modal" id="cart-modal">
+    <span class="close-cart" id="close-cart">×</span>
+    <h2>سلة المشتريات</h2>
+    <div id="cart-items"></div>
+    <p id="cart-total"></p>
+    <a id="whatsapp-btn" target="_blank" style="display:block;text-align:center;background:green;color:white;padding:10px;border-radius:5px;text-decoration:none;">اطلب الآن</a>
+</div>
+<div class="lightbox" id="lightbox">
+    <span class="prev" id="prev">❮</span>
+    <img id="lightbox-img" src="" alt="صورة المنتج" />
+    <span class="next" id="next">❯</span>
+</div>
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = "https://tkyiakteuwsmhokfmxtd.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRreWlha3RldXdzbWhva2ZteHRkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ5Mzg2ODQsImV4cCI6MjA3MDUxNDY4NH0.b_UTIODNRo3o0iNEKQzGHvR4fZ1MOnQm36iPClcPAvM";
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+// تخزين السلة محليًا
+let cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+function saveCart() {
+    localStorage.setItem("cart", JSON.stringify(cart));
+    updateCartCount();
+}
+
+function updateCartCount() {
+    document.getElementById("cart-count").textContent = cart.reduce((sum, item) => sum + item.quantity, 0);
+}
+
+async function loadProducts() {
+    const { data, error } = await supabaseClient
+        .from('products')
+        .select('*');
+
+    if (error) {
+        console.error("خطأ في جلب البيانات:", error);
+        return;
+    }
+
+    const grid = document.getElementById("products-grid");
+    grid.innerHTML = "";
+
+    data.forEach(product => {
+        const createdAt = new Date(product.created_at);
+        const isNew = (Date.now() - createdAt.getTime()) < (12 * 60 * 60 * 1000);
+
+        const productDiv = document.createElement("div");
+        productDiv.className = "product";
+
+        if (isNew) {
+            const badge = document.createElement("div");
+            badge.className = "new-badge";
+            badge.textContent = "NEW";
+            productDiv.appendChild(badge);
+        }
+
+        const img = document.createElement("img");
+        img.src = product.image1;
+        img.addEventListener("click", () => openLightbox(product));
+        productDiv.appendChild(img);
+
+        const name = document.createElement("h3");
+        name.textContent = product.name;
+        productDiv.appendChild(name);
+
+        const price = document.createElement("p");
+        price.textContent = `${product.price} ر.ع`;
+        productDiv.appendChild(price);
+
+        const btn = document.createElement("button");
+        btn.textContent = "أضف للسلة";
+        btn.addEventListener("click", () => addToCart(product));
+        productDiv.appendChild(btn);
+
+        grid.appendChild(productDiv);
+    });
+}
+
+function addToCart(product) {
+    const found = cart.find(item => item.id === product.id);
+    if (found) {
+        found.quantity++;
+    } else {
+        cart.push({ ...product, quantity: 1 });
+    }
+    saveCart();
+}
+
+function openCart() {
+    const modal = document.getElementById("cart-modal");
+    const itemsDiv = document.getElementById("cart-items");
+    itemsDiv.innerHTML = "";
+
+    let total = 0;
+    cart.forEach(item => {
+        const div = document.createElement("div");
+        div.textContent = `${item.name} × ${item.quantity} = ${item.price * item.quantity} ر.ع`;
+        itemsDiv.appendChild(div);
+        total += item.price * item.quantity;
+    });
+
+    document.getElementById("cart-total").textContent = `الإجمالي: ${total} ر.ع`;
+
+    const message = cart.map(item => `${item.name} × ${item.quantity}`).join("\n") + `\nالإجمالي: ${total} ر.ع`;
+    document.getElementById("whatsapp-btn").href = `https://wa.me/96898586097?text=${encodeURIComponent(message)}`;
+
+    modal.classList.add("active");
+}
+
+function closeCart() {
+    document.getElementById("cart-modal").classList.remove("active");
+}
+
+function openLightbox(product) {
+    const images = [
+        product.image1, product.image2, product.image3, product.image4,
+        product.image5, product.image6, product.image7, product.image8
+    ].filter(Boolean);
+
+    let index = 0;
+
+    const lightbox = document.getElementById("lightbox");
+    const imgEl = document.getElementById("lightbox-img");
+    const prev = document.getElementById("prev");
+    const next = document.getElementById("next");
+
+    function showImage(i) {
+        imgEl.src = images[i];
+    }
+
+    prev.onclick = () => {
+        index = (index - 1 + images.length) % images.length;
+        showImage(index);
+    };
+
+    next.onclick = () => {
+        index = (index + 1) % images.length;
+        showImage(index);
+    };
+
+    showImage(index);
+    lightbox.style.display = "flex";
+}
+
+document.getElementById("lightbox").addEventListener("click", (e) => {
+    if (e.target.id === "lightbox") {
+        document.getElementById("lightbox").style.display = "none";
+    }
+});
+
+document.getElementById("cart-icon").addEventListener("click", openCart);
+document.getElementById("close-cart").addEventListener("click", closeCart);
+
+document.querySelectorAll("nav a").forEach(link => {
+    link.addEventListener("click", (e) => {
+        e.preventDefault();
+        document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+        document.getElementById(link.dataset.page).classList.add("active");
+    });
+});
+
+document.getElementById("login-btn").addEventListener("click", () => {
+    const pass = document.getElementById("admin-password").value;
+    if (pass === "7732") {
+        document.getElementById("admin-panel").style.display = "block";
+    } else {
+        alert("كلمة المرور غير صحيحة");
+    }
+});
+
+document.getElementById("add-product-btn").addEventListener("click", async () => {
+    const name = document.getElementById("product-name").value;
+    const price = parseFloat(document.getElementById("product-price").value);
+    const description = document.getElementById("product-description").value;
+    const images = [];
+    for (let i = 1; i <= 8; i++) {
+        const val = document.getElementById(`product-image${i}`).value;
+        images.push(val || null);
+    }
+
+    const { error } = await supabaseClient.from("products").insert([{
+        name, price, description,
+        image1: images[0], image2: images[1], image3: images[2], image4: images[3],
+        image5: images[4], image6: images[5], image7: images[6], image8: images[7]
+    }]);
+
+    if (error) {
+        console.error("خطأ في الإضافة:", error);
+    } else {
+        alert("تمت إضافة المنتج");
+        loadProducts();
+    }
+});
+
+loadProducts();
+updateCartCount();
+</script>
+</body>
+</html>
