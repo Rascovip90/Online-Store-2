@@ -4,6 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>متجر إلكتروني</title>
+<script src="https://unpkg.com/@supabase/supabase-js"></script>
 <style>
 body {
     font-family: Arial, sans-serif;
@@ -213,6 +214,69 @@ nav a.active, nav a:hover {
     0% { background: red; color: white; }
     100% { background: white; color: red; }
 }
+.message {
+    margin-top: 10px;
+    padding: 8px;
+    border-radius: 5px;
+    font-weight: bold;
+    display: none;
+}
+.message.success {
+    background: #d4edda;
+    color: #155724;
+}
+.message.error {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+/* معرض الصور */
+#image-modal {
+    display: none;
+    position: fixed;
+    z-index: 2000;
+    left: 0; top: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.8);
+}
+#image-modal.active {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+#image-viewer {
+    max-width: 80%;
+    max-height: 70%;
+}
+#image-desc {
+    color: white;
+    margin-top: 10px;
+}
+.image-thumbs {
+    display: flex;
+    gap: 5px;
+    margin-top: 10px;
+}
+.image-thumbs img {
+    width: 50px; height: 50px;
+    object-fit: cover;
+    cursor: pointer;
+    border: 2px solid transparent;
+}
+.image-thumbs img.active {
+    border-color: red;
+}
+.image-nav {
+    position: absolute;
+    top: 50%;
+    font-size: 30px;
+    color: white;
+    cursor: pointer;
+    user-select: none;
+}
+#prev-img { left: 10px; }
+#next-img { right: 10px; }
 </style>
 </head>
 <body>
@@ -220,7 +284,7 @@ nav a.active, nav a:hover {
     متجر إلكتروني
     <div class="quran-text">
 (بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ)  
-"مَّا يَفْتَحِ اللَّهُ لِلنَّاسِ مِن رَّحْمَةٍ فَلَا مُمْسِك لَهَا"
+"مَّا يَفْتَحِ اللَّهُ لِلنَّاسِ مِن رَّحْمَةٍ فَلَا مُمْسِكَ لَهَا"
     </div>
 </header>
 <nav>
@@ -274,17 +338,20 @@ nav a.active, nav a:hover {
     <a id="whatsapp-btn" target="_blank">اطلب الآن</a>
 </div>
 
-<!-- Supabase & بداية الربط -->
-<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<!-- نافذة عرض الصور -->
+<div id="image-modal">
+    <span id="prev-img" class="image-nav">&#10094;</span>
+    <img id="image-viewer" src="" alt="">
+    <span id="next-img" class="image-nav">&#10095;</span>
+    <div id="image-desc"></div>
+    <div class="image-thumbs"></div>
+</div>
 <script>
-// تهيئة الاتصال بـ Supabase
-const SUPABASE_URL = "https://tkyiakteuwsmhokfmxtd.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRreWlha3RldXdzbWhva2ZteHRkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ5Mzg2ODQsImV4cCI6MjA3MDUxNDY4NH0.b_UTIODNRo3o0iNEKQzGHvR4fZ1MOnQm36iPClcPAvM";
+const { createClient } = supabase;
+const supabaseUrl = "https://tkyiakteuwsmhokfmxtd.supabase.co";
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRreWlha3RldXdzbWhva2ZteHRkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ5Mzg2ODQsImV4cCI6MjA3MDUxNDY4NH0.b_UTIODNRo3o0iNEKQzGHvR4fZ1MOnQm36iPClcPAvM";
+const db = createClient(supabaseUrl, supabaseKey);
 
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-</script>
-<script>
-// التنقل بين الصفحات
 const pages = document.querySelectorAll('.page');
 const navLinks = document.querySelectorAll('nav a');
 
@@ -306,39 +373,22 @@ navLinks.forEach(link => {
 let products = [];
 let cart = JSON.parse(localStorage.getItem('cart')) || [];
 
-// حفظ السلة في LocalStorage
+async function fetchProducts() {
+    const { data, error } = await db.from('products').select('*');
+    if (error) {
+        console.error('خطأ في جلب المنتجات:', error);
+        return;
+    }
+    products = data || [];
+    renderProducts();
+}
 function saveCart() {
     localStorage.setItem('cart', JSON.stringify(cart));
 }
-
-// تحديث عداد السلة
 function updateCartCount() {
     document.getElementById('cart-count').textContent = cart.reduce((acc, item) => acc + item.qty, 0);
 }
 
-// جلب المنتجات من Supabase
-async function loadProducts() {
-    const { data, error } = await supabaseClient
-        .from('products')
-        .select('*');
-
-    if (error) {
-        console.error("خطأ في جلب المنتجات:", error);
-        return;
-    }
-
-    products = data.map(p => ({
-        name: p.name,
-        price: p.price,
-        description: p.description,
-        images: p.images || []
-    }));
-
-    renderProducts();
-    renderAdminProducts();
-}
-
-// عرض المنتجات
 function renderProducts() {
     const grid = document.getElementById('products-grid');
     grid.innerHTML = '';
@@ -346,7 +396,7 @@ function renderProducts() {
         const div = document.createElement('div');
         div.className = 'product';
         div.innerHTML = `
-            <img src="${p.images[0] || ''}" data-idx="${idx}" class="view-img">
+            <img src="${p.images[0]}" data-idx="${idx}" class="view-img">
             <h3>${p.name}</h3>
             <div class="desc">${p.description}</div>
             <p>${p.price} ر.ع</p>
@@ -356,7 +406,6 @@ function renderProducts() {
         grid.appendChild(div);
     });
 
-    // ربط أحداث الأزرار
     document.querySelectorAll('.add-to-cart').forEach(btn => {
         btn.addEventListener('click', e => {
             const idx = e.target.getAttribute('data-idx');
@@ -380,7 +429,6 @@ function renderProducts() {
     });
 }
 
-// عرض السلة
 function renderCart() {
     const container = document.getElementById('cart-items');
     container.innerHTML = '';
@@ -392,7 +440,7 @@ function renderCart() {
         div.style.alignItems = 'center';
         div.style.marginBottom = '10px';
         div.innerHTML = `
-            <img src="${item.images[0] || ''}" class="cart-item-img">
+            <img src="${item.images[0]}" class="cart-item-img">
             <div>
                 <strong>${item.name}</strong><br>
                 <span class="cart-desc">${item.description}</span><br>
@@ -410,7 +458,6 @@ function renderCart() {
     document.getElementById('whatsapp-btn').href = `https://wa.me/98677324648?text=${encodeURIComponent(cart.map(i => `${i.name} (x${i.qty})`).join(', ') + `\nالإجمالي: ${total.toFixed(2)} ر.ع`)}`;
 }
 
-// تعديل الكمية
 function changeQty(idx, delta) {
     cart[idx].qty += delta;
     if (cart[idx].qty <= 0) cart.splice(idx, 1);
@@ -419,7 +466,6 @@ function changeQty(idx, delta) {
     renderCart();
 }
 
-// فتح السلة
 document.getElementById('cart-icon').addEventListener('click', () => {
     renderCart();
     document.getElementById('cart-modal').classList.add('active');
@@ -428,7 +474,6 @@ document.getElementById('close-cart').addEventListener('click', () => {
     document.getElementById('cart-modal').classList.remove('active');
 });
 
-// لوحة التحكم
 function renderAdminProducts() {
     const list = document.getElementById('admin-products-list');
     list.innerHTML = '';
@@ -436,20 +481,17 @@ function renderAdminProducts() {
         const div = document.createElement('div');
         div.innerHTML = `
             <strong>${p.name}</strong> - ${p.price} ر.ع
-            <button onclick="deleteProduct(${idx})" class="btn-3d">حذف</button>
+            <button onclick="deleteProduct(${p.id})" class="btn-3d">حذف</button>
         `;
         list.appendChild(div);
     });
 }
 
-// حذف منتج من Supabase
-async function deleteProduct(idx) {
-    const prodName = products[idx].name;
-    await supabaseClient.from('products').delete().eq('name', prodName);
-    loadProducts();
+async function deleteProduct(id) {
+    await db.from('products').delete().eq('id', id);
+    fetchProducts();
 }
 
-// تسجيل الدخول للوحة التحكم
 document.getElementById('login-btn').addEventListener('click', () => {
     if (document.getElementById('admin-password').value === '7732') {
         document.getElementById('admin-panel').style.display = 'block';
@@ -457,7 +499,6 @@ document.getElementById('login-btn').addEventListener('click', () => {
     }
 });
 
-// حفظ منتج جديد
 document.getElementById('save-product-btn').addEventListener('click', async () => {
     const name = document.getElementById('product-name').value;
     const price = parseFloat(document.getElementById('product-price').value);
@@ -468,10 +509,15 @@ document.getElementById('save-product-btn').addEventListener('click', async () =
         if (val) imgs.push(val);
     }
     if (name && price && imgs.length) {
-        await supabaseClient.from('products').insert([{ name, price, description: desc, images: imgs }]);
-        loadProducts();
-        document.getElementById('add-message').textContent = '✅ تم الإضافة بنجاح';
-        document.getElementById('add-message').className = 'message success';
+        const { error } = await db.from('products').insert([{ name, price, description: desc, images: imgs }]);
+        if (!error) {
+            document.getElementById('add-message').textContent = '✅ تم الإضافة بنجاح';
+            document.getElementById('add-message').className = 'message success';
+            fetchProducts();
+        } else {
+            document.getElementById('add-message').textContent = '❌ فشل في الإضافة';
+            document.getElementById('add-message').className = 'message error';
+        }
     } else {
         document.getElementById('add-message').textContent = '❌ فشل في الإضافة';
         document.getElementById('add-message').className = 'message error';
@@ -480,10 +526,9 @@ document.getElementById('save-product-btn').addEventListener('click', async () =
     setTimeout(()=> document.getElementById('add-message').style.display = 'none', 3000);
 });
 
-// معرض الصور
+// عرض الصور
 let currentProductIdx = 0;
 let currentImageIdx = 0;
-
 function showImageModal(prodIdx, imgIdx) {
     currentProductIdx = prodIdx;
     currentImageIdx = imgIdx;
@@ -491,7 +536,6 @@ function showImageModal(prodIdx, imgIdx) {
     modal.classList.add('active');
     updateImageViewer();
 }
-
 function updateImageViewer() {
     const prod = products[currentProductIdx];
     document.getElementById('image-viewer').src = prod.images[currentImageIdx];
@@ -509,7 +553,6 @@ function updateImageViewer() {
         thumbsContainer.appendChild(img);
     });
 }
-
 document.getElementById('prev-img').addEventListener('click', () => {
     currentImageIdx = (currentImageIdx - 1 + products[currentProductIdx].images.length) % products[currentProductIdx].images.length;
     updateImageViewer();
@@ -524,8 +567,7 @@ document.getElementById('image-modal').addEventListener('click', e => {
     }
 });
 
-// تحميل أولي
-loadProducts();
+fetchProducts();
 updateCartCount();
 </script>
 </body>
