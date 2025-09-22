@@ -3,536 +3,1805 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>متتبع الشحنات العالمي</title>
-    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <title>نظام متابعة المبيعات</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
     <style>
         :root {
-            --primary: #2c3e50;
-            --secondary: #3498db;
-            --accent: #27ae60;
-            --dark: #1a1a1a;
-            --light: #ecf0f1;
-            --parchment: #f8f9fa;
-            --warning: #f39c12;
-            --danger: #e74c3c;
-            --success: #2ecc71;
+            --primary-color: #3498db;
+            --secondary-color: #2980b9;
+            --success-color: #2ecc71;
+            --danger-color: #e74c3c;
+            --warning-color: #f39c12;
+            --light-color: #ecf0f1;
+            --dark-color: #34495e;
+            --info-color: #16a085;
         }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        
         body {
-            font-family: 'Cairo', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: var(--dark);
-            min-height: 100vh;
-            background-attachment: fixed;
-            position: relative;
-            overflow-x: hidden;
+            font-family: 'Tajawal', sans-serif;
+            background-color: #f8f9fa;
+            padding-bottom: 30px;
         }
-
-        body::before {
+        
+        .navbar {
+            background-color: var(--primary-color);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .navbar-brand {
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+        
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stats-card {
+            text-align: center;
+            padding: 20px;
+            border-radius: 10px;
+            color: white;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stats-card::before {
             content: '';
-            position: fixed;
+            position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?ixlib=rb-4.0.3&auto=format&fit=crop&w=1950&q=80') center/cover;
-            opacity: 0.1;
-            z-index: -1;
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(-100%);
+            transition: transform 0.5s ease;
         }
-
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-            padding: 20px;
+        
+        .stats-card:hover::before {
+            transform: translateX(0);
         }
-
-        header {
-            text-align: center;
-            padding: 40px 0;
-            position: relative;
+        
+        .stats-card i {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
         }
-
-        .logo {
-            font-size: 3rem;
-            color: white;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-            margin-bottom: 10px;
-            font-weight: 700;
+        
+        .stats-card h3 {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 5px;
         }
-
-        .tagline {
-            font-size: 1.2rem;
-            color: rgba(255, 255, 255, 0.9);
-            margin-bottom: 30px;
+        
+        .stats-card p {
+            font-size: 1rem;
+            margin: 0;
         }
-
-        .tracking-form {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 15px;
-            padding: 40px;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            margin: 40px 0;
+        
+        .base-cost {
+            background: linear-gradient(45deg, var(--info-color), #138871);
         }
-
-        .form-group {
-            margin-bottom: 25px;
+        
+        .total-cost {
+            background: linear-gradient(45deg, var(--danger-color), #c0392b);
         }
-
-        label {
-            display: block;
-            margin-bottom: 10px;
-            color: var(--primary);
-            font-weight: 600;
-            font-size: 1.1rem;
+        
+        .total-sales {
+            background: linear-gradient(45deg, var(--success-color), #27ae60);
         }
-
-        input[type="text"] {
-            width: 100%;
-            padding: 15px 20px;
-            font-size: 1.1rem;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            background: white;
-            color: var(--dark);
-            font-family: 'Cairo', sans-serif;
-            transition: all 0.3s ease;
+        
+        .net-profit {
+            background: linear-gradient(45deg, var(--warning-color), #d35400);
         }
-
-        input[type="text"]:focus {
-            outline: none;
-            border-color: var(--secondary);
-            box-shadow: 0 0 10px rgba(52, 152, 219, 0.3);
+        
+        .products-count {
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
         }
-
-        .btn {
-            background: linear-gradient(45deg, var(--secondary), var(--accent));
-            color: white;
-            border: none;
-            padding: 15px 40px;
-            font-size: 1.2rem;
-            font-weight: 600;
-            border-radius: 50px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: block;
-            margin: 30px auto 0;
-            position: relative;
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+        
+        .btn-warning {
+            background-color: var(--warning-color);
+            border-color: var(--warning-color);
+        }
+        
+        .btn-warning:hover {
+            background-color: #e67e22;
+            border-color: #e67e22;
+        }
+        
+        .table-container {
+            border-radius: 10px;
             overflow: hidden;
-            font-family: 'Cairo', sans-serif;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
-
-        .btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 20px rgba(52, 152, 219, 0.4);
+        
+        .table thead {
+            background-color: var(--primary-color);
+            color: white;
         }
-
-        .btn:active {
-            transform: translateY(1px);
+        
+        .table tbody tr:hover {
+            background-color: rgba(52, 152, 219, 0.1);
         }
-
-        .result-container {
-            display: none;
-            margin-top: 40px;
-            animation: fadeIn 0.8s ease;
+        
+        .table-secondary {
+            opacity: 0.7;
         }
-
+        
+        .action-buttons .btn {
+            margin: 0 3px;
+        }
+        
+        .modal-header {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.25rem rgba(52, 152, 219, 0.25);
+        }
+        
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1050;
+        }
+        
+        .toast {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .toast-success {
+            border-right: 4px solid var(--success-color);
+        }
+        
+        .toast-error {
+            border-right: 4px solid var(--danger-color);
+        }
+        
+        .toast-warning {
+            border-right: 4px solid var(--warning-color);
+        }
+        
+        .counter {
+            display: inline-block;
+        }
+        
+        .section-title {
+            position: relative;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            font-weight: bold;
+        }
+        
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 70px;
+            height: 3px;
+            background-color: var(--primary-color);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #6c757d;
+        }
+        
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            color: #dee2e6;
+        }
+        
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
-
-        .tracking-result {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 15px;
-            padding: 30px;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease forwards;
         }
-
-        .shipment-header {
-            text-align: center;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid #eee;
-        }
-
-        .tracking-number {
-            font-size: 1.8rem;
-            color: var(--primary);
-            margin-bottom: 10px;
-            font-weight: 700;
-        }
-
-        .status {
-            font-size: 1.4rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            font-weight: 600;
-        }
-
-        .status.processing { color: var(--warning); }
-        .status.transit { color: var(--secondary); }
-        .status.delivered { color: var(--success); }
-
-        .timeline {
+        
+        .section-divider {
+            height: 2px;
+            background-color: #e9ecef;
+            margin: 40px 0;
             position: relative;
-            margin: 30px 0;
         }
-
-        .timeline::before {
+        
+        .section-divider::after {
             content: '';
             position: absolute;
-            top: 0;
-            right: 50%;
-            width: 4px;
-            height: 100%;
-            background: linear-gradient(to bottom, var(--secondary), var(--accent));
-            border-radius: 2px;
+            top: 50%;
+            right: 0;
+            width: 100px;
+            height: 4px;
+            background-color: var(--primary-color);
+            transform: translateY(-50%);
         }
-
-        .timeline-item {
-            position: relative;
-            margin-bottom: 40px;
+        
+        .loading-spinner {
             display: flex;
-            justify-content: flex-end;
-            padding-right: 60px;
-        }
-
-        .timeline-item:nth-child(even) {
-            flex-direction: row-reverse;
-            padding-right: 0;
-            padding-left: 60px;
-        }
-
-        .timeline-content {
-            background: #f8f9fa;
-            border: 1px solid #e9ecef;
-            border-radius: 10px;
-            padding: 20px;
-            width: 45%;
-            position: relative;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .timeline-item:nth-child(even) .timeline-content {
-            background: #e8f4f8;
-            border-color: #bee5eb;
-        }
-
-        .timeline-icon {
-            position: absolute;
-            top: 20px;
-            right: -30px;
-            width: 60px;
-            height: 60px;
-            background: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
             justify-content: center;
-            font-size: 1.5rem;
-            color: var(--secondary);
-            border: 3px solid var(--secondary);
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
-            z-index: 1;
+            align-items: center;
+            height: 200px;
         }
-
-        .timeline-item:nth-child(even) .timeline-icon {
-            right: auto;
-            left: -30px;
-            color: var(--accent);
-            border-color: var(--accent);
+        
+        .nav-tabs {
+            margin-bottom: 20px;
         }
-
-        .timeline-date {
+        
+        .nav-tabs .nav-link {
+            color: var(--dark-color);
+            font-weight: 500;
+        }
+        
+        .nav-tabs .nav-link.active {
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+        
+        .sale-row {
+            background-color: rgba(46, 204, 113, 0.1);
+        }
+        
+        .sale-row:hover {
+            background-color: rgba(46, 204, 113, 0.2);
+        }
+        
+        .has-sales-badge {
+            background-color: var(--warning-color);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            margin-right: 5px;
+        }
+        
+        .disabled-badge {
+            background-color: var(--dark-color);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            margin-right: 5px;
+        }
+        
+        .low-stock {
+            color: var(--danger-color);
+            font-weight: bold;
+        }
+        
+        .quantity-badge {
+            background-color: var(--light-color);
+            color: var(--dark-color);
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            margin-left: 5px;
+        }
+        
+        .stats-description {
             font-size: 0.9rem;
-            color: #6c757d;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+        
+        .product-stats {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .product-stats-main {
+            font-size: 2rem;
+            font-weight: bold;
             margin-bottom: 5px;
         }
-
-        .timeline-location {
-            font-weight: bold;
-            font-size: 1.2rem;
-            margin-bottom: 10px;
-            color: var(--primary);
-        }
-
-        .timeline-status {
+        
+        .product-stats-sub {
             font-size: 1rem;
-            line-height: 1.5;
-            color: #495057;
+            opacity: 0.9;
         }
-
-        .footer {
-            text-align: center;
-            padding: 30px 0;
-            margin-top: 50px;
-            color: rgba(255, 255, 255, 0.8);
-            font-size: 0.9rem;
+        
+        .unit-price {
+            color: var(--secondary-color);
+            font-size: 0.85rem;
         }
-
-        .error-message {
-            background: rgba(231, 76, 60, 0.1);
-            border: 1px solid rgba(231, 76, 60, 0.3);
-            color: var(--danger);
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 20px;
-            text-align: center;
-            display: none;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 20px;
-            display: none;
-        }
-
-        .loading i {
-            font-size: 2rem;
-            color: var(--secondary);
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        @media (max-width: 768px) {
-            .logo {
-                font-size: 2.5rem;
-            }
-            
-            .tracking-form {
-                padding: 25px;
-            }
-            
-            .timeline::before {
-                right: 20px;
-            }
-            
-            .timeline-item {
-                padding-right: 50px;
-            }
-            
-            .timeline-item:nth-child(even) {
-                padding-left: 50px;
-            }
-            
-            .timeline-content {
-                width: calc(100% - 50px);
-            }
-            
-            .timeline-icon {
-                right: 15px;
-            }
-            
-            .timeline-item:nth-child(even) .timeline-icon {
-                left: 15px;
-            }
+        
+        .settings-section {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #dee2e6;
         }
     </style>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1 class="logo">متتبع الشحنات العالمي</h1>
-            <p class="tagline">تتبع شحنتك حول العالم بسهولة</p>
-        </header>
-
-        <div class="tracking-form">
-            <div class="form-group">
-                <label for="tracking-number">أدخل رقم الشحنة</label>
-                <input type="text" id="tracking-number" placeholder="مثال: TRK123456789" autocomplete="off">
-            </div>
-            <button class="btn" id="track-btn">
-                <i class="fas fa-search"></i> تتبع الشحنة
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-chart-line ms-2"></i>
+                نظام متابعة المبيعات
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
             </button>
-            <div class="loading" id="loading">
-                <i class="fas fa-spinner"></i>
-                <p>جاري البحث عن الشحنة...</p>
-            </div>
-            <div class="error-message" id="error-message">
-                <i class="fas fa-exclamation-circle"></i> رقم الشحنة غير موجود! يرجى التحقق من الرقم والمحاولة مرة أخرى.
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#dashboard">
+                            <i class="fas fa-tachometer-alt ms-1"></i>
+                            الرئيسية
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#products">
+                            <i class="fas fa-box ms-1"></i>
+                            المنتجات
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#configModal">
+                            <i class="fas fa-cog ms-1"></i>
+                            الإعدادات
+                        </a>
+                    </li>
+                </ul>
             </div>
         </div>
-
-        <div class="result-container" id="result-container">
-            <div class="tracking-result">
-                <div class="shipment-header">
-                    <div class="tracking-number" id="display-tracking-number">TRK123456789</div>
-                    <div class="status" id="shipment-status">
-                        <i class="fas fa-truck"></i>
-                        <span>في طريقها إليك</span>
+    </nav>
+    <!-- Toast Container -->
+    <div class="toast-container"></div>
+    <!-- Configuration Modal -->
+    <div class="modal fade" id="configModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">إعدادات النظام</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="configForm">
+                        <div class="mb-3">
+                            <label for="supabaseUrl" class="form-label">رابط Supabase</label>
+                            <input type="text" class="form-control" id="supabaseUrl" placeholder="https://xxxxxxxxxxxxx.supabase.co" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="supabaseKey" class="form-label">مفتاح Supabase</label>
+                            <input type="password" class="form-control" id="supabaseKey" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." required>
+                        </div>
+                    </form>
+                    
+                    <div class="settings-section">
+                        <h6>إعدادات التكلفة الأساسية</h6>
+                        <p class="text-muted small">التكلفة الأساسية تمثل إجمالي تكلفة جميع المنتجات التي تم إضافتها للنظام.</p>
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-warning" id="resetBaseCostBtn">
+                                <i class="fas fa-redo me-2"></i>
+                                إعادة حساب التكلفة الأساسية
+                            </button>
+                            <button class="btn btn-danger" id="clearBaseCostBtn">
+                                <i class="fas fa-trash me-2"></i>
+                                تصفير التكلفة الأساسية
+                            </button>
+                        </div>
                     </div>
                 </div>
-
-                <div class="timeline" id="timeline">
-                    <!-- Timeline items will be generated by JavaScript -->
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn btn-primary" id="saveConfigBtn">حفظ الإعدادات</button>
                 </div>
             </div>
         </div>
-
-        <footer class="footer">
-            <p>© 2023 متتبع الشحنات العالمي - جميع الحقوق محفوظة</p>
-            <p>نخدمكم في جميع أنحاء العالم</p>
-        </footer>
     </div>
-
+    
+    <!-- Reset Base Cost Confirmation Modal -->
+    <div class="modal fade" id="resetBaseCostConfirmationModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-dark">
+                    <h5 class="modal-title">تأكيد إعادة حساب التكلفة الأساسية</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>هل أنت متأكد من إعادة حساب التكلفة الأساسية؟</p>
+                    <p>سيتم إعادة حساب التكلفة الأساسية بناءً على المنتجات الحالية في النظام.</p>
+                    <p class="text-muted">التكلفة الحالية: <span id="currentBaseCost">0</span></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn btn-warning" id="confirmResetBaseCostBtn">إعادة حساب</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Clear Base Cost Confirmation Modal -->
+    <div class="modal fade" id="clearBaseCostConfirmationModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">تأكيد تصفير التكلفة الأساسية</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>هل أنت متأكد من تصفير التكلفة الأساسية؟</p>
+                    <p>هذا الإجراء سيحذف قيمة التكلفة الأساسية الحالية ويعيدها إلى الصفر.</p>
+                    <p class="text-muted">التكلفة الحالية: <span id="currentBaseCostClear">0</span></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn btn-danger" id="confirmClearBaseCostBtn">تصفير</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container mt-4">
+        <!-- Dashboard Section -->
+        <section id="dashboard" class="mb-5">
+            <h2 class="section-title">لوحة المعلومات</h2>
+            
+            <div class="row">
+                <div class="col-md-3 col-sm-6 mb-4">
+                    <div class="stats-card base-cost">
+                        <i class="fas fa-coins"></i>
+                        <h3 class="counter" data-target="0">0</h3>
+                        <p>التكلفة الأساسية</p>
+                        <div class="stats-description">إجمالي تكلفة جميع المنتجات الأصلية</div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3 col-sm-6 mb-4">
+                    <div class="stats-card total-cost">
+                        <i class="fas fa-money-bill-wave"></i>
+                        <h3 class="counter" data-target="0">0</h3>
+                        <p>التكلفة الإجمالية</p>
+                        <div class="stats-description">تكلفة شراء المنتجات الحالية</div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3 col-sm-6 mb-4">
+                    <div class="stats-card total-sales">
+                        <i class="fas fa-chart-line"></i>
+                        <h3 class="counter" data-target="0">0</h3>
+                        <p>المبيعات</p>
+                        <div class="stats-description">إجمالي قيمة المبيعات</div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3 col-sm-6 mb-4">
+                    <div class="stats-card net-profit">
+                        <i class="fas fa-coins"></i>
+                        <h3 class="counter" data-target="0">0</h3>
+                        <p>صافي الربح</p>
+                        <div class="stats-description">إجمالي الأرباح الصافية</div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3 col-sm-6 mb-4">
+                    <div class="stats-card products-count">
+                        <i class="fas fa-boxes"></i>
+                        <div class="product-stats">
+                            <div class="product-stats-main counter" data-target="0">0</div>
+                            <div class="product-stats-sub">من <span id="productTypes">0</span> نوع</div>
+                        </div>
+                        <p>عدد المنتجات</p>
+                        <div class="stats-description">إجمالي عدد الوحدات المتاحة</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <div class="section-divider"></div>
+        <!-- Products Section -->
+        <section id="products">
+            <h2 class="section-title mb-4">المنتجات والمبيعات</h2>
+            
+            <!-- Nav tabs -->
+            <ul class="nav nav-tabs" id="productsTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="products-tab" data-bs-toggle="tab" data-bs-target="#products-content" type="button" role="tab">المنتجات</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="sales-tab" data-bs-toggle="tab" data-bs-target="#sales-content" type="button" role="tab">عمليات البيع</button>
+                </li>
+            </ul>
+            
+            <!-- Tab content -->
+            <div class="tab-content" id="productsTabsContent">
+                <!-- Products Tab -->
+                <div class="tab-pane fade show active" id="products-content" role="tabpanel">
+                    <div class="d-flex justify-content-between align-items-center my-4">
+                        <h3 class="mb-0">قائمة المنتجات</h3>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProductModal">
+                            <i class="fas fa-plus ms-2"></i>
+                            إضافة منتج
+                        </button>
+                    </div>
+                    
+                    <div class="card table-container">
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>اسم المنتج</th>
+                                            <th>تكلفة الشراء (للوحدة)</th>
+                                            <th>سعر البيع (للوحدة)</th>
+                                            <th>الكمية المتاحة</th>
+                                            <th>الربح المحتمل (للوحدة)</th>
+                                            <th>الإجراءات</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="productsTableBody">
+                                        <!-- Products will be added here dynamically -->
+                                    </tbody>
+                                </table>
+                                <div id="emptyState" class="empty-state">
+                                    <i class="fas fa-box-open"></i>
+                                    <h5>لا توجد منتجات</h5>
+                                    <p>اضغط على زر "إضافة منتج" لإضافة منتج جديد</p>
+                                </div>
+                                <div id="loadingState" class="loading-spinner" style="display: none;">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">جاري التحميل...</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Sales Tab -->
+                <div class="tab-pane fade" id="sales-content" role="tabpanel">
+                    <div class="d-flex justify-content-between align-items-center my-4">
+                        <h3 class="mb-0">عمليات البيع</h3>
+                        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addSaleModal">
+                            <i class="fas fa-plus ms-2"></i>
+                            إضافة عملية بيع
+                        </button>
+                    </div>
+                    
+                    <div class="card table-container">
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>اسم المنتج</th>
+                                            <th>الكمية</th>
+                                            <th>سعر البيع (للوحدة)</th>
+                                            <th>الإجمالي</th>
+                                            <th>التاريخ</th>
+                                            <th>الإجراءات</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="salesTableBody">
+                                        <!-- Sales will be added here dynamically -->
+                                    </tbody>
+                                </table>
+                                <div id="emptySalesState" class="empty-state">
+                                    <i class="fas fa-shopping-cart"></i>
+                                    <h5>لا توجد عمليات بيع</h5>
+                                    <p>اضغط على زر "إضافة عملية بيع" لإضافة عملية بيع جديدة</p>
+                                </div>
+                                <div id="loadingSalesState" class="loading-spinner" style="display: none;">
+                                    <div class="spinner-border text-success" role="status">
+                                        <span class="visually-hidden">جاري التحميل...</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+    <!-- Add Product Modal -->
+    <div class="modal fade" id="addProductModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">إضافة منتج جديد</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addProductForm">
+                        <div class="mb-3">
+                            <label for="productName" class="form-label">اسم المنتج</label>
+                            <input type="text" class="form-control" id="productName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="productCost" class="form-label">تكلفة الشراء (للوحدة)</label>
+                            <input type="number" class="form-control" id="productCost" step="0.01" required>
+                            <div class="form-text">سعر شراء الوحدة الواحدة من المنتج</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="productPrice" class="form-label">سعر البيع (للوحدة)</label>
+                            <input type="number" class="form-control" id="productPrice" step="0.01" required>
+                            <div class="form-text">سعر بيع الوحدة الواحدة من المنتج</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="productQuantity" class="form-label">الكمية المتاحة</label>
+                            <input type="number" class="form-control" id="productQuantity" min="0" value="0" required>
+                            <div class="form-text">عدد الوحدات المتاحة من المنتج</div>
+                        </div>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            سيتم حساب التكلفة الإجمالية تلقائياً: <span id="totalCostPreview">0</span>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn btn-primary" id="saveProductBtn">حفظ المنتج</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Edit Product Modal -->
+    <div class="modal fade" id="editProductModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">تعديل المنتج</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editProductForm">
+                        <input type="hidden" id="editProductId">
+                        <div class="mb-3">
+                            <label for="editProductName" class="form-label">اسم المنتج</label>
+                            <input type="text" class="form-control" id="editProductName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editProductCost" class="form-label">تكلفة الشراء (للوحدة)</label>
+                            <input type="number" class="form-control" id="editProductCost" step="0.01" required>
+                            <div class="form-text">سعر شراء الوحدة الواحدة من المنتج</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editProductPrice" class="form-label">سعر البيع (للوحدة)</label>
+                            <input type="number" class="form-control" id="editProductPrice" step="0.01" required>
+                            <div class="form-text">سعر بيع الوحدة الواحدة من المنتج</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editProductQuantity" class="form-label">الكمية المتاحة</label>
+                            <input type="number" class="form-control" id="editProductQuantity" min="0" required>
+                            <div class="form-text">عدد الوحدات المتاحة من المنتج</div>
+                        </div>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            سيتم حساب التكلفة الإجمالية تلقائياً: <span id="editTotalCostPreview">0</span>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn btn-primary" id="updateProductBtn">تحديث المنتج</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Add Sale Modal -->
+    <div class="modal fade" id="addSaleModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">إضافة عملية بيع جديدة</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addSaleForm">
+                        <div class="mb-3">
+                            <label for="saleProduct" class="form-label">المنتج</label>
+                            <select class="form-select" id="saleProduct" required>
+                                <option value="" selected disabled>اختر منتجاً</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="saleQuantity" class="form-label">الكمية</label>
+                            <input type="number" class="form-control" id="saleQuantity" min="1" value="1" required>
+                            <div class="form-text">الكمية المتاحة: <span id="availableQuantity">0</span></div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="salePrice" class="form-label">سعر البيع (للوحدة)</label>
+                            <input type="number" class="form-control" id="salePrice" step="0.01" readonly>
+                            <div class="form-text">سعر بيع الوحدة الواحدة</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="saleTotal" class="form-label">الإجمالي</label>
+                            <input type="number" class="form-control" id="saleTotal" step="0.01" readonly>
+                            <div class="form-text">سيتم حساب الإجمالي تلقائياً</div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn btn-success" id="saveSaleBtn">حفظ عملية البيع</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteConfirmationModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">تأكيد الحذف</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="deleteConfirmationText">هل أنت متأكد من الحذف؟ لا يمكن التراجع عن هذا الإجراء.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteBtn">حذف</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Insufficient Stock Modal -->
+    <div class="modal fade" id="insufficientStockModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-dark">
+                    <h5 class="modal-title">كمية غير كافية</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>الكمية المطلوبة غير متوفرة في المخزون.</p>
+                    <p>الكمية المتاحة: <span id="insufficientStockQuantity">0</span></p>
+                    <p>الكمية المطلوبة: <span id="insufficientStockRequested">0</span></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">فهمت</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Initialize Supabase
-        const supabaseUrl = 'https://qfpesqrfngqpatupyoug.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFmcGVzcXJmbmdxcGF0dXB5b3VnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY4MzkyMjIsImV4cCI6MjA3MjQxNTIyMn0.ugl2IHFo-j48ZOCBUnxEvsbCABUh3NbeXTQXS0VUwM4';
-        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
-
-        // Format date to Gregorian calendar
-        function formatDate(dateStr) {
-            const date = new Date(dateStr);
-            return date.toLocaleDateString('ar-EG', { 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
+        // DOM elements
+        const productsTableBody = document.getElementById('productsTableBody');
+        const salesTableBody = document.getElementById('salesTableBody');
+        const emptyState = document.getElementById('emptyState');
+        const emptySalesState = document.getElementById('emptySalesState');
+        const loadingState = document.getElementById('loadingState');
+        const loadingSalesState = document.getElementById('loadingSalesState');
+        const addProductForm = document.getElementById('addProductForm');
+        const editProductForm = document.getElementById('editProductForm');
+        const addSaleForm = document.getElementById('addSaleForm');
+        const configForm = document.getElementById('configForm');
+        const saveProductBtn = document.getElementById('saveProductBtn');
+        const updateProductBtn = document.getElementById('updateProductBtn');
+        const saveSaleBtn = document.getElementById('saveSaleBtn');
+        const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+        const saveConfigBtn = document.getElementById('saveConfigBtn');
+        const resetBaseCostBtn = document.getElementById('resetBaseCostBtn');
+        const clearBaseCostBtn = document.getElementById('clearBaseCostBtn');
+        const confirmResetBaseCostBtn = document.getElementById('confirmResetBaseCostBtn');
+        const confirmClearBaseCostBtn = document.getElementById('confirmClearBaseCostBtn');
+        const saleProductSelect = document.getElementById('saleProduct');
+        const saleQuantityInput = document.getElementById('saleQuantity');
+        const salePriceInput = document.getElementById('salePrice');
+        const saleTotalInput = document.getElementById('saleTotal');
+        const availableQuantitySpan = document.getElementById('availableQuantity');
+        const insufficientStockQuantity = document.getElementById('insufficientStockQuantity');
+        const insufficientStockRequested = document.getElementById('insufficientStockRequested');
+        const productTypesSpan = document.getElementById('productTypes');
+        const totalCostPreview = document.getElementById('totalCostPreview');
+        const editTotalCostPreview = document.getElementById('editTotalCostPreview');
+        const currentBaseCost = document.getElementById('currentBaseCost');
+        const currentBaseCostClear = document.getElementById('currentBaseCostClear');
+        
+        // Global variables
+        let supabase = null;
+        let products = [];
+        let sales = [];
+        let itemToDelete = null;
+        let deleteType = null;
+        let baseCostValue = 0; // لتخزين التكلفة الأساسية
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load config from localStorage
+            const supabaseUrl = localStorage.getItem('supabaseUrl') || '';
+            const supabaseKey = localStorage.getItem('supabaseKey') || '';
+            
+            document.getElementById('supabaseUrl').value = supabaseUrl;
+            document.getElementById('supabaseKey').value = supabaseKey;
+            
+            // Initialize Supabase if config exists
+            if (supabaseUrl && supabaseKey) {
+                initializeSupabase(supabaseUrl, supabaseKey);
+            } else {
+                // Show config modal if no config exists
+                const configModal = new bootstrap.Modal(document.getElementById('configModal'));
+                configModal.show();
+            }
+            
+            // Event listeners
+            saveProductBtn.addEventListener('click', addProduct);
+            updateProductBtn.addEventListener('click', updateProduct);
+            saveSaleBtn.addEventListener('click', addSale);
+            confirmDeleteBtn.addEventListener('click', deleteItem);
+            saveConfigBtn.addEventListener('click', saveConfig);
+            resetBaseCostBtn.addEventListener('click', openResetBaseCostConfirmation);
+            clearBaseCostBtn.addEventListener('click', openClearBaseCostConfirmation);
+            confirmResetBaseCostBtn.addEventListener('click', resetBaseCost);
+            confirmClearBaseCostBtn.addEventListener('click', clearBaseCost);
+            
+            // Calculate total when quantity changes
+            saleQuantityInput.addEventListener('input', calculateSaleTotal);
+            
+            // Update price and available quantity when product changes
+            saleProductSelect.addEventListener('change', updateSaleInfo);
+            
+            // Calculate total cost preview when product cost or quantity changes
+            document.getElementById('productCost').addEventListener('input', calculateTotalCostPreview);
+            document.getElementById('productQuantity').addEventListener('input', calculateTotalCostPreview);
+            document.getElementById('editProductCost').addEventListener('input', calculateEditTotalCostPreview);
+            document.getElementById('editProductQuantity').addEventListener('input', calculateEditTotalCostPreview);
+            
+            // Smooth scrolling for navigation links
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        window.scrollTo({
+                            top: target.offsetTop - 70,
+                            behavior: 'smooth'
+                        });
+                    }
+                });
             });
+        });
+        
+        // Calculate total cost preview for add product modal
+        function calculateTotalCostPreview() {
+            const cost = parseFloat(document.getElementById('productCost').value) || 0;
+            const quantity = parseInt(document.getElementById('productQuantity').value) || 0;
+            const total = cost * quantity;
+            totalCostPreview.textContent = total.toFixed(2);
         }
-
-        // Format time
-        function formatTime(timeStr) {
-            const [hours, minutes] = timeStr.split(':');
-            return `${hours}:${minutes}`;
+        
+        // Calculate total cost preview for edit product modal
+        function calculateEditTotalCostPreview() {
+            const cost = parseFloat(document.getElementById('editProductCost').value) || 0;
+            const quantity = parseInt(document.getElementById('editProductQuantity').value) || 0;
+            const total = cost * quantity;
+            editTotalCostPreview.textContent = total.toFixed(2);
         }
-
-        // Get status icon and class
-        function getStatusInfo(status) {
-            const statusMap = {
-                'قيد تجهيز الطلب': { icon: 'fa-box-open', class: 'processing' },
-                'تم استلام الشحنة': { icon: 'fa-clipboard-check', class: 'processing' },
-                'في طريقها إليك': { icon: 'fa-truck', class: 'transit' },
-                'في النقل الجوي': { icon: 'fa-plane', class: 'transit' },
-                'في النقل البحري': { icon: 'fa-ship', class: 'transit' },
-                'وصلت المستودع': { icon: 'fa-warehouse', class: 'transit' },
-                'خرجت للتسليم': { icon: 'fa-shipping-fast', class: 'transit' },
-                'تم التسليم': { icon: 'fa-check-circle', class: 'delivered' }
-            };
-            
-            return statusMap[status] || { icon: 'fa-question-circle', class: 'processing' };
+        
+        // Initialize Supabase
+        function initializeSupabase(url, key) {
+            try {
+                supabase = window.supabase.createClient(url, key);
+                fetchProducts();
+                fetchSales();
+                fetchBaseCost(); // جلب التكلفة الأساسية
+            } catch (error) {
+                console.error('Error initializing Supabase:', error);
+                showToast('خطأ في تهيئة الاتصال بقاعدة البيانات', 'error');
+            }
         }
-
-        // Track shipment
-        async function trackShipment() {
-            const trackingNumber = document.getElementById('tracking-number').value.trim().toUpperCase();
-            const resultContainer = document.getElementById('result-container');
-            const errorMessage = document.getElementById('error-message');
-            const timeline = document.getElementById('timeline');
-            const loading = document.getElementById('loading');
+        
+        // Save configuration
+        function saveConfig() {
+            const supabaseUrl = document.getElementById('supabaseUrl').value.trim();
+            const supabaseKey = document.getElementById('supabaseKey').value.trim();
             
-            // Reset UI
-            errorMessage.style.display = 'none';
-            timeline.innerHTML = '';
-            resultContainer.style.display = 'none';
-            
-            if (!trackingNumber) {
-                errorMessage.style.display = 'block';
+            if (!supabaseUrl || !supabaseKey) {
+                showToast('يرجى إدخال جميع الحقول المطلوبة', 'error');
                 return;
             }
             
-            // Show loading
-            loading.style.display = 'block';
+            localStorage.setItem('supabaseUrl', supabaseUrl);
+            localStorage.setItem('supabaseKey', supabaseKey);
+            
+            initializeSupabase(supabaseUrl, supabaseKey);
+            
+            bootstrap.Modal.getInstance(document.getElementById('configModal')).hide();
+            showToast('تم حفظ الإعدادات بنجاح', 'success');
+        }
+        
+        // Fetch products from Supabase
+        async function fetchProducts() {
+            if (!supabase) return;
             
             try {
-                // Fetch shipment from Supabase
-                const { data: shipment, error } = await supabase
-                    .from('shipments')
-                    .select(`
-                        *,
-                        timeline_entries (*)
-                    `)
-                    .eq('tracking_number', trackingNumber)
-                    .single();
+                loadingState.style.display = 'flex';
+                emptyState.style.display = 'none';
                 
-                if (error || !shipment) {
-                    throw new Error('Shipment not found');
-                }
-                
-                // Update shipment info
-                document.getElementById('display-tracking-number').textContent = shipment.tracking_number;
-                
-                const statusInfo = getStatusInfo(shipment.status);
-                const statusElement = document.getElementById('shipment-status');
-                statusElement.innerHTML = `
-                    <i class="fas ${statusInfo.icon}"></i>
-                    <span>${shipment.status}</span>
-                `;
-                statusElement.className = `status ${statusInfo.class}`;
-                
-                // Generate timeline
-                if (shipment.timeline_entries && shipment.timeline_entries.length > 0) {
-                    shipment.timeline_entries.forEach((entry, index) => {
-                        const timelineItem = document.createElement('div');
-                        timelineItem.classList.add('timeline-item');
-                        
-                        timelineItem.innerHTML = `
-                            <div class="timeline-content">
-                                <div class="timeline-date">${formatDate(entry.date)} - ${formatTime(entry.time)}</div>
-                                <div class="timeline-location">${entry.location}</div>
-                                <div class="timeline-status">${entry.status}</div>
-                            </div>
-                            <div class="timeline-icon">
-                                <i class="fas ${entry.icon || 'fa-map-marker-alt'}"></i>
-                            </div>
-                        `;
-                        
-                        timeline.appendChild(timelineItem);
-                    });
-                } else {
-                    timeline.innerHTML = '<p style="text-align: center; color: #6c757d;">لا توجد مراحل مسجلة لهذه الشحنة بعد</p>';
-                }
-                
-                
-                // تحديث المشاهدات وحالة القراءة
-                await supabase
-                    .from('shipments')
-                    .update({ 
-                        views: (shipment.views || 0) + 1,
-                        is_read: true
-                    })
-                    .eq('id', shipment.id);
-
-                // إعادة جلب الشحنة بعد التحديث
-                const { data: updatedShipment } = await supabase
-                    .from('shipments')
+                const { data, error } = await supabase
+                    .from('products')
                     .select('*')
-                    .eq('id', shipment.id)
-                    .single();
-                console.log('Updated views:', updatedShipment.views);
-
-                resultContainer.style.display = 'block';
+                    .order('is_disabled', { ascending: true }) // المنتجات المفعلة أولاً
+                    .order('id', { ascending: true });
+                
+                if (error) {
+                    throw error;
+                }
+                
+                products = data || [];
+                renderProducts();
+                updateProductsSelect();
+                updateStatistics();
             } catch (error) {
-                console.error('Error tracking shipment:', error);
-                errorMessage.style.display = 'block';
+                console.error('Error fetching products:', error);
+                showToast('خطأ في جلب البيانات من قاعدة البيانات', 'error');
+                renderProducts();
+                updateProductsSelect();
+                updateStatistics();
             } finally {
-                loading.style.display = 'none';
+                loadingState.style.display = 'none';
             }
         }
-
-        // Event listeners
-        document.getElementById('track-btn').addEventListener('click', trackShipment);
-        document.getElementById('tracking-number').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                trackShipment();
+        
+        // Fetch sales from Supabase
+        async function fetchSales() {
+            if (!supabase) return;
+            
+            try {
+                loadingSalesState.style.display = 'flex';
+                emptySalesState.style.display = 'none';
+                
+                const { data, error } = await supabase
+                    .from('sales')
+                    .select(`
+                        *,
+                        products(name, price)
+                    `)
+                    .order('id', { ascending: false });
+                
+                if (error) {
+                    throw error;
+                }
+                
+                sales = data || [];
+                renderSales();
+                updateStatistics();
+            } catch (error) {
+                console.error('Error fetching sales:', error);
+                showToast('خطأ في جلب بيانات المبيعات من قاعدة البيانات', 'error');
+                renderSales();
+                updateStatistics();
+            } finally {
+                loadingSalesState.style.display = 'none';
             }
-        });
+        }
+        
+        // Fetch base cost from Supabase
+        async function fetchBaseCost() {
+            if (!supabase) return;
+            
+            try {
+                // جلب التكلفة الأساسية من جدول منفصل إذا كان موجودًا
+                const { data, error } = await supabase
+                    .from('system_settings')
+                    .select('base_cost')
+                    .single();
+                
+                if (error && error.code !== 'PGRST116') { // PGRST116 = No rows returned
+                    console.error('Error fetching base cost:', error);
+                    // في حالة الخطأ، احسب التكلفة الأساسية من المنتجات الحالية
+                    calculateBaseCostFromProducts();
+                    return;
+                }
+                
+                // إذا لم يتم العثور على قيمة أو كانت القيمة null، احسبها من المنتجات الحالية
+                if (data && data.base_cost !== null && data.base_cost !== undefined) {
+                    baseCostValue = parseFloat(data.base_cost);
+                    console.log('Base cost loaded from database:', baseCostValue);
+                } else {
+                    // حساب التكلفة الأساسية من المنتجات الحالية
+                    calculateBaseCostFromProducts();
+                }
+                
+                updateStatistics();
+            } catch (error) {
+                console.error('Error in fetchBaseCost:', error);
+                // في حالة الخطأ، احسب التكلفة الأساسية من المنتجات الحالية
+                calculateBaseCostFromProducts();
+                updateStatistics();
+            }
+        }
+        
+        // Calculate base cost from products
+        function calculateBaseCostFromProducts() {
+            // التكلفة الأساسية = مجموع (تكلفة الوحدة × الكمية) لكل المنتجات
+            baseCostValue = products.reduce((sum, product) => {
+                const cost = parseFloat(product.cost) || 0;
+                const quantity = parseInt(product.quantity) || 0;
+                return sum + (cost * quantity);
+            }, 0);
+            
+            console.log('Base cost calculated from products:', baseCostValue);
+            
+            // حفظ التكلفة الأساسية في قاعدة البيانات
+            saveBaseCostToDatabase();
+            
+            // تحديث الإحصائيات فورًا
+            updateStatistics();
+        }
+        
+        // Save base cost to database
+        async function saveBaseCostToDatabase() {
+            if (!supabase) return;
+            
+            try {
+                // التحقق من وجود سجل في جدول الإعدادات
+                const { data: existingData, error: fetchError } = await supabase
+                    .from('system_settings')
+                    .select('id')
+                    .single();
+                
+                if (fetchError && fetchError.code !== 'PGRST116') {
+                    console.error('Error checking existing settings:', fetchError);
+                    return;
+                }
+                
+                if (existingData) {
+                    // تحديث السجل الموجود
+                    const { error: updateError } = await supabase
+                        .from('system_settings')
+                        .update({ base_cost: baseCostValue })
+                        .eq('id', existingData.id);
+                    
+                    if (updateError) {
+                        console.error('Error updating base cost:', updateError);
+                    } else {
+                        console.log('Base cost updated in database:', baseCostValue);
+                    }
+                } else {
+                    // إنشاء سجل جديد
+                    const { error: insertError } = await supabase
+                        .from('system_settings')
+                        .insert([{ base_cost: baseCostValue }]);
+                    
+                    if (insertError) {
+                        console.error('Error inserting base cost:', insertError);
+                    } else {
+                        console.log('Base cost inserted to database:', baseCostValue);
+                    }
+                }
+            } catch (error) {
+                console.error('Error in saveBaseCostToDatabase:', error);
+            }
+        }
+        
+        // Open reset base cost confirmation modal
+        function openResetBaseCostConfirmation() {
+            currentBaseCost.textContent = baseCostValue.toFixed(2);
+            const resetBaseCostModal = new bootstrap.Modal(document.getElementById('resetBaseCostConfirmationModal'));
+            resetBaseCostModal.show();
+        }
+        
+        // Open clear base cost confirmation modal
+        function openClearBaseCostConfirmation() {
+            currentBaseCostClear.textContent = baseCostValue.toFixed(2);
+            const clearBaseCostModal = new bootstrap.Modal(document.getElementById('clearBaseCostConfirmationModal'));
+            clearBaseCostModal.show();
+        }
+        
+        // Reset base cost
+        async function resetBaseCost() {
+            if (!supabase) {
+                showToast('يرجى تهيئة الاتصال بقاعدة البيانات أولاً', 'error');
+                return;
+            }
+            
+            try {
+                // حساب التكلفة الأساسية من المنتجات الحالية
+                calculateBaseCostFromProducts();
+                
+                bootstrap.Modal.getInstance(document.getElementById('resetBaseCostConfirmationModal')).hide();
+                showToast('تم إعادة حساب التكلفة الأساسية بنجاح', 'success');
+            } catch (error) {
+                console.error('Error resetting base cost:', error);
+                showToast('خطأ في إعادة حساب التكلفة الأساسية', 'error');
+            }
+        }
+        
+        // Clear base cost
+        async function clearBaseCost() {
+            if (!supabase) {
+                showToast('يرجى تهيئة الاتصال بقاعدة البيانات أولاً', 'error');
+                return;
+            }
+            
+            try {
+                // تصفير التكلفة الأساسية
+                baseCostValue = 0;
+                
+                // حفظ التكلفة الأساسية في قاعدة البيانات
+                await saveBaseCostToDatabase();
+                
+                // تحديث الإحصائيات
+                updateStatistics();
+                
+                bootstrap.Modal.getInstance(document.getElementById('clearBaseCostConfirmationModal')).hide();
+                showToast('تم تصفير التكلفة الأساسية بنجاح', 'success');
+            } catch (error) {
+                console.error('Error clearing base cost:', error);
+                showToast('خطأ في تصفير التكلفة الأساسية', 'error');
+            }
+        }
+        
+        // Render products table
+        function renderProducts() {
+            productsTableBody.innerHTML = '';
+            
+            if (products.length === 0) {
+                emptyState.style.display = 'block';
+                return;
+            }
+            
+            emptyState.style.display = 'none';
+            
+            // فصل المنتجات المفعلة عن المعطلة
+            const activeProducts = products.filter(p => !p.is_disabled);
+            const disabledProducts = products.filter(p => p.is_disabled);
+            
+            // عرض المنتجات المفعلة أولاً
+            activeProducts.forEach(product => {
+                renderProductRow(product);
+            });
+            
+            // عرض المنتجات المعطلة في الأسفل
+            disabledProducts.forEach(product => {
+                renderProductRow(product);
+            });
+        }
+        
+        // دالة جديدة لعرض صف منتج واحد
+        function renderProductRow(product) {
+            // Check if product has sales
+            const hasSales = sales.some(sale => sale.product_id === product.id);
+            const profit = product.price - product.cost;
+            const row = document.createElement('tr');
+            row.className = 'fade-in';
+            
+            // Check if stock is low (less than 5)
+            const isLowStock = product.quantity < 5 && product.quantity > 0;
+            
+            // Add disabled class if product is disabled
+            if (product.is_disabled) {
+                row.classList.add('table-secondary');
+            }
+            
+            row.innerHTML = `
+                <td>${product.id}</td>
+                <td>
+                    ${product.name}
+                    ${hasSales ? '<span class="has-sales-badge">له مبيعات</span>' : ''}
+                    ${product.is_disabled ? '<span class="disabled-badge">معطل</span>' : ''}
+                </td>
+                <td>${product.cost.toFixed(2)}</td>
+                <td>${product.price.toFixed(2)}</td>
+                <td>
+                    ${product.quantity}
+                    <span class="quantity-badge">
+                        ${product.is_disabled ? '<i class="fas fa-ban"></i> معطل' : 
+                          isLowStock ? '<i class="fas fa-exclamation-triangle low-stock"></i> مخزون منخفض' : 'متوفر'}
+                    </span>
+                </td>
+                <td>${profit.toFixed(2)}</td>
+                <td class="action-buttons">
+                    <button class="btn btn-sm btn-primary" onclick="openEditModal(${product.id})" ${product.is_disabled ? 'disabled' : ''}>
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    ${product.quantity === 0 && !product.is_disabled ? 
+                        `<button class="btn btn-sm btn-warning" onclick="toggleProductStatus(${product.id})">
+                            <i class="fas fa-ban"></i>
+                        </button>` : ''}
+                    ${product.is_disabled ? 
+                        `<button class="btn btn-sm btn-success" onclick="toggleProductStatus(${product.id})">
+                            <i class="fas fa-check"></i>
+                        </button>` : ''}
+                    <button class="btn btn-sm btn-danger" onclick="openDeleteModal('product', ${product.id})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            `;
+            productsTableBody.appendChild(row);
+        }
+        
+        // Render sales table
+        function renderSales() {
+            salesTableBody.innerHTML = '';
+            
+            if (sales.length === 0) {
+                emptySalesState.style.display = 'block';
+                return;
+            }
+            
+            emptySalesState.style.display = 'none';
+            
+            sales.forEach(sale => {
+                const total = sale.quantity * sale.products.price;
+                const row = document.createElement('tr');
+                row.className = 'fade-in sale-row';
+                row.innerHTML = `
+                    <td>${sale.id}</td>
+                    <td>${sale.products.name}</td>
+                    <td>${sale.quantity}</td>
+                    <td>${sale.products.price.toFixed(2)}</td>
+                    <td>${total.toFixed(2)}</td>
+                    <td>${new Date(sale.sale_date).toLocaleDateString('ar-SA')}</td>
+                    <td class="action-buttons">
+                        <button class="btn btn-sm btn-danger" onclick="openDeleteModal('sale', ${sale.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                salesTableBody.appendChild(row);
+            });
+        }
+        
+        // Update products select dropdown
+        function updateProductsSelect() {
+            saleProductSelect.innerHTML = '<option value="" selected disabled>اختر منتجاً</option>';
+            
+            // إضافة المنتجات المفعلة فقط
+            products.filter(p => !p.is_disabled && p.quantity > 0).forEach(product => {
+                const option = document.createElement('option');
+                option.value = product.id;
+                option.textContent = `${product.name} - ${product.price.toFixed(2)} (الكمية: ${product.quantity})`;
+                saleProductSelect.appendChild(option);
+            });
+        }
+        
+        // Update sale price and available quantity when product changes
+        function updateSaleInfo() {
+            const productId = parseInt(saleProductSelect.value);
+            const product = products.find(p => p.id === productId);
+            
+            if (product && !product.is_disabled) {
+                salePriceInput.value = product.price.toFixed(2);
+                availableQuantitySpan.textContent = product.quantity;
+                
+                // Set max quantity to available stock
+                saleQuantityInput.max = product.quantity;
+                
+                // If current quantity is more than available, adjust it
+                if (parseInt(saleQuantityInput.value) > product.quantity) {
+                    saleQuantityInput.value = product.quantity;
+                }
+                
+                calculateSaleTotal();
+            } else {
+                salePriceInput.value = '';
+                availableQuantitySpan.textContent = '0';
+                saleQuantityInput.max = '';
+                saleTotalInput.value = '';
+            }
+        }
+        
+        // Calculate sale total
+        function calculateSaleTotal() {
+            const quantity = parseInt(saleQuantityInput.value) || 0;
+            const price = parseFloat(salePriceInput.value) || 0;
+            const total = quantity * price;
+            
+            saleTotalInput.value = total.toFixed(2);
+        }
+        
+        // دالة لتحديث عداد التكلفة الأساسية فقط
+        function updateBaseCostCounter() {
+            const baseCostCounter = document.querySelector('.base-cost .counter');
+            const target = parseFloat(baseCostValue.toFixed(2));
+            const increment = target / 100;
+            let current = 0;
+            
+            baseCostCounter.setAttribute('data-target', target.toFixed(2));
+            
+            const updateCounter = () => {
+                current += increment;
+                if (current < target) {
+                    baseCostCounter.textContent = current.toFixed(2);
+                    setTimeout(updateCounter, 10);
+                } else {
+                    baseCostCounter.textContent = target.toFixed(2);
+                }
+            };
+            
+            updateCounter();
+        }
+        
+        // Update statistics
+        function updateStatistics() {
+            // فلترة المنتجات المفعلة فقط لعداد المنتجات
+            const activeProducts = products.filter(p => !p.is_disabled);
+            
+            // Calculate total cost (من جميع المنتجات بما فيها المعطلة)
+            // التكلفة الإجمالية = مجموع (تكلفة الوحدة × الكمية) لكل المنتجات
+            const totalCost = products.reduce((sum, product) => {
+                return sum + (parseFloat(product.cost) * parseInt(product.quantity));
+            }, 0);
+            
+            // Calculate total sales from actual sales data (من جميع المبيعات)
+            let totalSales = 0;
+            let totalCostOfSoldItems = 0;
+            
+            sales.forEach(sale => {
+                const product = products.find(p => p.id === sale.product_id);
+                if (product) {
+                    totalSales += sale.quantity * parseFloat(product.price);
+                    totalCostOfSoldItems += sale.quantity * parseFloat(product.cost);
+                }
+            });
+            
+            // Calculate net profit
+            const netProfit = totalSales - totalCostOfSoldItems;
+            
+            // Calculate total quantity of all active products (للعدادات فقط)
+            const totalQuantity = activeProducts.reduce((sum, product) => sum + parseInt(product.quantity), 0);
+            
+            // Count number of active product types (للعدادات فقط)
+            const productTypes = activeProducts.length;
+            
+            // Update counter targets
+            document.querySelector('.total-cost .counter').setAttribute('data-target', totalCost.toFixed(2));
+            document.querySelector('.total-sales .counter').setAttribute('data-target', totalSales.toFixed(2));
+            document.querySelector('.net-profit .counter').setAttribute('data-target', netProfit.toFixed(2));
+            document.querySelector('.products-count .counter').setAttribute('data-target', totalQuantity);
+            productTypesSpan.textContent = productTypes;
+            
+            // تحديث عداد التكلفة الأساسية بشكل منفصل
+            updateBaseCostCounter();
+            
+            // Animate counters
+            animateCounters();
+        }
+        
+        // Update only product count statistics
+        function updateProductCountOnly() {
+            // Calculate total quantity of all active products
+            const activeProducts = products.filter(p => !p.is_disabled);
+            const totalQuantity = activeProducts.reduce((sum, product) => sum + parseInt(product.quantity), 0);
+            
+            // Count number of active product types
+            const productTypes = activeProducts.length;
+            
+            // Update counter targets for products count only
+            document.querySelector('.products-count .counter').setAttribute('data-target', totalQuantity);
+            productTypesSpan.textContent = productTypes;
+            
+            // Animate only products counter
+            const productsCounter = document.querySelector('.products-count .counter');
+            const target = parseFloat(productsCounter.getAttribute('data-target'));
+            const increment = target / 100;
+            let current = 0;
+            
+            const updateCounter = () => {
+                current += increment;
+                if (current < target) {
+                    productsCounter.textContent = current.toFixed(2);
+                    setTimeout(updateCounter, 10);
+                } else {
+                    productsCounter.textContent = target.toFixed(2);
+                }
+            };
+            
+            updateCounter();
+        }
+        
+        // Animate counters
+        function animateCounters() {
+            const counters = document.querySelectorAll('.counter');
+            
+            counters.forEach(counter => {
+                const target = parseFloat(counter.getAttribute('data-target'));
+                const increment = target / 100;
+                let current = 0;
+                
+                const updateCounter = () => {
+                    current += increment;
+                    if (current < target) {
+                        counter.textContent = current.toFixed(2);
+                        setTimeout(updateCounter, 10);
+                    } else {
+                        counter.textContent = target.toFixed(2);
+                    }
+                };
+                
+                updateCounter();
+            });
+        }
+        
+        // Add product
+        async function addProduct() {
+            if (!supabase) {
+                showToast('يرجى تهيئة الاتصال بقاعدة البيانات أولاً', 'error');
+                return;
+            }
+            
+            const name = document.getElementById('productName').value.trim();
+            const cost = parseFloat(document.getElementById('productCost').value);
+            const price = parseFloat(document.getElementById('productPrice').value);
+            const quantity = parseInt(document.getElementById('productQuantity').value) || 0;
+            
+            if (!name || isNaN(cost) || isNaN(price) || isNaN(quantity) || cost <= 0 || price <= 0 || quantity < 0) {
+                showToast('يرجى إدخال بيانات صحيحة', 'error');
+                return;
+            }
+            
+            if (price <= cost) {
+                showToast('سعر البيع يجب أن يكون أكبر من تكلفة الشراء', 'warning');
+                return;
+            }
+            
+            try {
+                const { data, error } = await supabase
+                    .from('products')
+                    .insert([{ name, cost, price, quantity, is_disabled: false }]);
+                
+                if (error) {
+                    throw error;
+                }
+                
+                // تحديث التكلفة الأساسية
+                const productTotalCost = cost * quantity;
+                baseCostValue += productTotalCost;
+                console.log('Adding product to base cost:', productTotalCost, 'New base cost:', baseCostValue);
+                
+                // حفظ التكلفة الأساسية في قاعدة البيانات
+                await saveBaseCostToDatabase();
+                
+                // Reset form and close modal
+                addProductForm.reset();
+                totalCostPreview.textContent = '0';
+                bootstrap.Modal.getInstance(document.getElementById('addProductModal')).hide();
+                
+                // Refresh products list
+                await fetchProducts();
+                
+                showToast('تمت إضافة المنتج بنجاح', 'success');
+            } catch (error) {
+                console.error('Error adding product:', error);
+                showToast('خطأ في إضافة المنتج', 'error');
+            }
+        }
+        
+        // Open edit modal
+        async function openEditModal(id) {
+            if (!supabase) {
+                showToast('يرجى تهيئة الاتصال بقاعدة البيانات أولاً', 'error');
+                return;
+            }
+            
+            try {
+                const { data, error } = await supabase
+                    .from('products')
+                    .select('*')
+                    .eq('id', id)
+                    .single();
+                
+                if (error) {
+                    throw error;
+                }
+                
+                document.getElementById('editProductId').value = data.id;
+                document.getElementById('editProductName').value = data.name;
+                document.getElementById('editProductCost').value = data.cost;
+                document.getElementById('editProductPrice').value = data.price;
+                document.getElementById('editProductQuantity').value = data.quantity;
+                
+                // Calculate total cost preview
+                calculateEditTotalCostPreview();
+                
+                const editModal = new bootstrap.Modal(document.getElementById('editProductModal'));
+                editModal.show();
+            } catch (error) {
+                console.error('Error fetching product:', error);
+                showToast('خطأ في جلب بيانات المنتج', 'error');
+            }
+        }
+        
+        // Update product
+        async function updateProduct() {
+            if (!supabase) {
+                showToast('يرجى تهيئة الاتصال بقاعدة البيانات أولاً', 'error');
+                return;
+            }
+            
+            const id = parseInt(document.getElementById('editProductId').value);
+            const name = document.getElementById('editProductName').value.trim();
+            const cost = parseFloat(document.getElementById('editProductCost').value);
+            const price = parseFloat(document.getElementById('editProductPrice').value);
+            const quantity = parseInt(document.getElementById('editProductQuantity').value) || 0;
+            
+            if (!name || isNaN(cost) || isNaN(price) || isNaN(quantity) || cost <= 0 || price <= 0 || quantity < 0) {
+                showToast('يرجى إدخال بيانات صحيحة', 'error');
+                return;
+            }
+            
+            if (price <= cost) {
+                showToast('سعر البيع يجب أن يكون أكبر من تكلفة الشراء', 'warning');
+                return;
+            }
+            
+            try {
+                const product = products.find(p => p.id === id);
+                let updateData = { name, cost, price, quantity };
+                
+                // If product was disabled and now has quantity > 0, enable it
+                if (product && product.is_disabled && quantity > 0) {
+                    updateData.is_disabled = false;
+                }
+                
+                const { data, error } = await supabase
+                    .from('products')
+                    .update(updateData)
+                    .eq('id', id);
+                
+                if (error) {
+                    throw error;
+                }
+                
+                bootstrap.Modal.getInstance(document.getElementById('editProductModal')).hide();
+                
+                // Refresh products list
+                await fetchProducts();
+                
+                showToast('تم تحديث المنتج بنجاح', 'success');
+            } catch (error) {
+                console.error('Error updating product:', error);
+                showToast('خطأ في تحديث المنتج', 'error');
+            }
+        }
+        
+        // Add sale
+        async function addSale() {
+            if (!supabase) {
+                showToast('يرجى تهيئة الاتصال بقاعدة البيانات أولاً', 'error');
+                return;
+            }
+            
+            const productId = parseInt(saleProductSelect.value);
+            const quantity = parseInt(saleQuantityInput.value);
+            
+            if (!productId || isNaN(quantity) || quantity <= 0) {
+                showToast('يرجى إدخال بيانات صحيحة', 'error');
+                return;
+            }
+            
+            // Check if product exists and is active
+            const product = products.find(p => p.id === productId);
+            if (!product) {
+                showToast('المنتج المحدد غير موجود', 'error');
+                return;
+            }
+            
+            if (product.is_disabled) {
+                showToast('المنتج المحدد معطل ولا يمكن بيعه', 'warning');
+                return;
+            }
+            
+            if (quantity > product.quantity) {
+                // Show insufficient stock modal
+                insufficientStockQuantity.textContent = product.quantity;
+                insufficientStockRequested.textContent = quantity;
+                const insufficientStockModal = new bootstrap.Modal(document.getElementById('insufficientStockModal'));
+                insufficientStockModal.show();
+                return;
+            }
+            
+            try {
+                const { data, error } = await supabase
+                    .from('sales')
+                    .insert([{ product_id: productId, quantity }]);
+                
+                if (error) {
+                    throw error;
+                }
+                
+                // Update product quantity
+                const newQuantity = product.quantity - quantity;
+                await supabase
+                    .from('products')
+                    .update({ quantity: newQuantity })
+                    .eq('id', productId);
+                
+                // If quantity becomes zero, ask if user wants to disable the product
+                if (newQuantity === 0) {
+                    setTimeout(() => {
+                        if (confirm('لقد نفذت كمية هذا المنتج. هل تريد تعطيله؟')) {
+                            toggleProductStatus(productId);
+                        }
+                    }, 500);
+                }
+                
+                // Reset form and close modal
+                addSaleForm.reset();
+                salePriceInput.value = '';
+                saleTotalInput.value = '';
+                availableQuantitySpan.textContent = '0';
+                bootstrap.Modal.getInstance(document.getElementById('addSaleModal')).hide();
+                
+                // Refresh lists
+                await fetchProducts();
+                await fetchSales();
+                
+                showToast('تمت إضافة عملية البيع بنجاح', 'success');
+            } catch (error) {
+                console.error('Error adding sale:', error);
+                showToast('خطأ في إضافة عملية البيع', 'error');
+            }
+        }
+        
+        // Open delete modal
+        function openDeleteModal(type, id) {
+            itemToDelete = id;
+            deleteType = type;
+            
+            const deleteConfirmationText = document.getElementById('deleteConfirmationText');
+            if (type === 'product') {
+                deleteConfirmationText.textContent = 'هل أنت متأكد من حذف هذا المنتج؟ سيتم حذف جميع عمليات البيع المرتبطة به أيضاً. لا يمكن التراجع عن هذا الإجراء.';
+            } else {
+                deleteConfirmationText.textContent = 'هل أنت متأكد من حذف عملية البيع هذه؟ سيتم استعادة كمية المنتج. لا يمكن التراجع عن هذا الإجراء.';
+            }
+            
+            const deleteModal = new bootstrap.Modal(document.getElementById('deleteConfirmationModal'));
+            deleteModal.show();
+        }
+        
+        // Delete item (product or sale)
+        async function deleteItem() {
+            if (!supabase || !itemToDelete || !deleteType) {
+                showToast('يرجى تهيئة الاتصال بقاعدة البيانات أولاً', 'error');
+                return;
+            }
+            
+            try {
+                let error;
+                
+                if (deleteType === 'product') {
+                    // Delete the product and its associated sales
+                    const { error: deleteError } = await supabase
+                        .from('products')
+                        .delete()
+                        .eq('id', itemToDelete);
+                    error = deleteError;
+                } else {
+                    // For sales, we need to restore the product quantity
+                    const sale = sales.find(s => s.id === itemToDelete);
+                    if (sale) {
+                        const product = products.find(p => p.id === sale.product_id);
+                        if (product) {
+                            const newQuantity = product.quantity + sale.quantity;
+                            await supabase
+                                .from('products')
+                                .update({ quantity: newQuantity })
+                                .eq('id', product.id);
+                        }
+                    }
+                    
+                    const { error: deleteError } = await supabase
+                        .from('sales')
+                        .delete()
+                        .eq('id', itemToDelete);
+                    error = deleteError;
+                }
+                
+                if (error) {
+                    throw error;
+                }
+                
+                bootstrap.Modal.getInstance(document.getElementById('deleteConfirmationModal')).hide();
+                itemToDelete = null;
+                deleteType = null;
+                
+                // Refresh lists
+                if (deleteType === 'product') {
+                    await fetchProducts();
+                    await fetchSales();
+                    showToast('تم حذف المنتج بنجاح', 'success');
+                } else {
+                    await fetchProducts();
+                    await fetchSales();
+                    showToast('تم حذف عملية البيع بنجاح', 'success');
+                }
+            } catch (error) {
+                console.error('Error deleting item:', error);
+                showToast('خطأ في الحذف', 'error');
+            }
+        }
+        
+        // دالة جديدة لتبديل حالة المنتج (تفعيل/تعطيل)
+        async function toggleProductStatus(id) {
+            if (!supabase) {
+                showToast('يرجى تهيئة الاتصال بقاعدة البيانات أولاً', 'error');
+                return;
+            }
+            
+            try {
+                const product = products.find(p => p.id === id);
+                if (!product) {
+                    showToast('المنتج المحدد غير موجود', 'error');
+                    return;
+                }
+                
+                const newStatus = !product.is_disabled;
+                
+                const { data, error } = await supabase
+                    .from('products')
+                    .update({ is_disabled: newStatus })
+                    .eq('id', id);
+                
+                if (error) {
+                    throw error;
+                }
+                
+                // Refresh products list
+                await fetchProducts();
+                
+                showToast(newStatus ? 'تم تفعيل المنتج بنجاح' : 'تم تعطيل المنتج بنجاح', 'success');
+            } catch (error) {
+                console.error('Error toggling product status:', error);
+                showToast('خطأ في تغيير حالة المنتج', 'error');
+            }
+        }
+        
+        // Show toast notification
+        function showToast(message, type = 'success') {
+            const toastContainer = document.querySelector('.toast-container');
+            const toastId = 'toast-' + Date.now();
+            
+            const toastHtml = `
+                <div id="${toastId}" class="toast toast-${type}" role="alert" aria-live="assertive" aria-atomic="true">
+                    <div class="toast-body d-flex">
+                        <div class="me-2">
+                            <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'exclamation-triangle'}"></i>
+                        </div>
+                        <div>${message}</div>
+                        <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast"></button>
+                    </div>
+                </div>
+            `;
+            
+            toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+            
+            const toastElement = document.getElementById(toastId);
+            const toast = new bootstrap.Toast(toastElement, { autohide: true, delay: 3000 });
+            toast.show();
+            
+            toastElement.addEventListener('hidden.bs.toast', () => {
+                toastElement.remove();
+            });
+        }
     </script>
 </body>
 </html>
